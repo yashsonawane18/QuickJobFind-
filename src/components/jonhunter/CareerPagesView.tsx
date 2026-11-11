@@ -33,7 +33,7 @@ import {
   fetchCareerPagesCompanies,
   fetchCareerPagesStats,
   searchCareerPages,
-} from '../../lib/drcDiscoveryApi';
+} from '../../lib/quickjobDiscoveryApi';
 import { CandidateParsedProfile } from '../../lib/applicationApi';
 import { CompanyLogo } from './CompanyLogo';
 import { getActiveTheme } from '../../config/themeConfig';
@@ -155,7 +155,7 @@ export const CareerPagesView: React.FC<CareerPagesViewProps> = ({
         limit: 25,
         candidate: candidateProfile ? {
           name: candidateProfile.name || 'Candidate',
-          email: candidateProfile.email || 'candidate@drc.com',
+          email: candidateProfile.email || 'candidate@quickjob.internal',
           phone: candidateProfile.phone || '',
           location: candidateProfile.location || selectedLocation,
           total_experience_years: candidateProfile.total_experience_years || (candidateProfile as any).experience_years || 3,

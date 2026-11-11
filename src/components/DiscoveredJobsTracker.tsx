@@ -59,7 +59,7 @@ export const INSTANT_ROLE_FILTERS: InstantRoleFilter[] = [
 export type DiscoveredJobsTrackerProps = JonHunterJobPortalProps;
 
 /**
- * DiscoveredJobsTracker - Naukri-inspired redesign with DRC green identity.
+ * DiscoveredJobsTracker - Naukri-inspired redesign with QuickJob green identity.
  * Delegates cleanly to the modular JonHunterJobPortal.
  */
 export const DiscoveredJobsTracker: React.FC<DiscoveredJobsTrackerProps> = (props) => {

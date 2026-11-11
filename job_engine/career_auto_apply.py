@@ -665,7 +665,7 @@ async def execute_playwright_auto_apply_with_proof(
                 </div>
                 <div class="footer-audit">
                   <span>URL: {target.application_url}</span>
-                  <span>DRC Job Intelligence Engine &bull; Zero Mock Fallback</span>
+                  <span>QuickJob Intelligence Engine &bull; Zero Mock Fallback</span>
                 </div>
               </div>
             </body>

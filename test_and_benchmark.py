@@ -52,12 +52,12 @@ def test_database_performance():
     t_init = (time.perf_counter() - t0) * 1000
     print(f"  init_db() execution time: {t_init:.2f} ms (Guard active)")
 
-    test_email = "test_benchmark@drc.com"
+    test_email = "test_benchmark@quickjob.internal"
     test_jobs = [
         {
             "id": f"TEST-{i}",
             "job_title": f"Senior Software Engineer {i}",
-            "company": "DRC Partner Tech",
+            "company": "QuickJob Partner Tech",
             "location": "Bengaluru, Karnataka",
             "salary": "₹25,00,000 - ₹40,00,000 / yr",
             "experience_required": "4-7 Years",

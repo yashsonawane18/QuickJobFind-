@@ -33,6 +33,6 @@ temp_resumes/
 *.mp4
 *.png
 job_engine/proof_screenshots/
-!public/drc-logo*.png
+!public/quickjob*.svg
 !public/favicon.png
-!src/assets/drc-logo*.png
+

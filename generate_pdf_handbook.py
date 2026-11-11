@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-DRC Job Search Engine - Technical Architecture Handbook PDF Generator
+QuickJob Search Engine - Technical Architecture Handbook PDF Generator
 Builds an executive, publication-grade PDF handbook from the technical handbook specifications.
 """
 
@@ -45,7 +45,7 @@ class NumberedCanvas(canvas.Canvas):
         self.setFillColor(colors.HexColor("#64748B"))
 
         # Running Header
-        self.drawString(45, 755, "DRC Job Intelligence Engine — Technical Architecture & Integration Handbook")
+        self.drawString(45, 755, "QuickJob Intelligence Engine — Technical Architecture & Integration Handbook")
         self.setStrokeColor(colors.HexColor("#CBD5E1"))
         self.setLineWidth(0.5)
         self.line(45, 748, 567, 748)
@@ -196,7 +196,7 @@ def build_handbook_pdf(output_path: str):
     # =========================================================================
     # TITLE BANNER
     # =========================================================================
-    story.append(Paragraph("DRC Job Intelligence Engine", title_style))
+    story.append(Paragraph("QuickJob Intelligence Engine", title_style))
     story.append(Paragraph("End-to-End Technical Architecture, Execution Flows & Production Roadmap", subtitle_style))
     story.append(Paragraph(f"<b>Document Version:</b> 2.0.0 &nbsp;|&nbsp; <b>Date:</b> {datetime.now().strftime('%B %d, %Y')} &nbsp;|&nbsp; <b>Target:</b> Engineering Leadership & Management", meta_style))
     story.append(Spacer(1, 10))
@@ -207,7 +207,7 @@ def build_handbook_pdf(output_path: str):
     # =========================================================================
     story.append(Paragraph("1. Executive Summary & Big Picture Architecture", h1_style))
     story.append(Paragraph(
-        "The DRC Job Assistant platform delivers sub-20ms job discovery, deterministic ATS resume compatibility scoring, and duplicate-proof multi-batch candidate matching. To understand the architecture simply, consider the <b>Restaurant Analogy</b>:",
+        "The QuickJob Platform platform delivers sub-20ms job discovery, deterministic ATS resume compatibility scoring, and duplicate-proof multi-batch candidate matching. To understand the architecture simply, consider the <b>Restaurant Analogy</b>:",
         body_style
     ))
 
@@ -262,7 +262,7 @@ def build_handbook_pdf(output_path: str):
         [Paragraph("<code>src/App.tsx</code>", table_cell_style), Paragraph("Frontend", table_cell_style), Paragraph("Central router and screen switchboard (Home, QA-to-BA, Job Discovery, Tracker, Pricing).", table_cell_style)],
         [Paragraph("<code>src/components/JobDiscovery.tsx</code>", table_cell_style), Paragraph("Frontend", table_cell_style), Paragraph("Interactive job search UI with instant filters, experience selectors, and batch discovery triggers.", table_cell_style)],
         [Paragraph("<code>src/components/DiscoveredJobsTracker.tsx</code>", table_cell_style), Paragraph("Frontend", table_cell_style), Paragraph("Renders structured job cards, ATS fit badges, matched skill pills, and live application links.", table_cell_style)],
-        [Paragraph("<code>src/lib/drcDiscoveryApi.ts</code>", table_cell_style), Paragraph("Frontend API", table_cell_style), Paragraph("<b>The Bridge:</b> TypeScript client making typed REST calls to the FastAPI Job Engine.", table_cell_style)],
+        [Paragraph("<code>src/lib/quickjobDiscoveryApi.ts</code>", table_cell_style), Paragraph("Frontend API", table_cell_style), Paragraph("<b>The Bridge:</b> TypeScript client making typed REST calls to the FastAPI Job Engine.", table_cell_style)],
         [Paragraph("<code>job_engine/api_server.py</code>", table_cell_style), Paragraph("Backend Core", table_cell_style), Paragraph("<b>Main Microservice:</b> FastAPI server hosting 12 REST endpoints for search, scoring, and DB ops.", table_cell_style)],
         [Paragraph("<code>job_engine/two_source_matcher.py</code>", table_cell_style), Paragraph("Backend Engine", table_cell_style), Paragraph("Parallel orchestrator executing concurrent LinkedIn and Career Page queries with cross-source deduplication.", table_cell_style)],
         [Paragraph("<code>job_engine/job_matcher.py</code>", table_cell_style), Paragraph("Backend Engine", table_cell_style), Paragraph("Real-time LinkedIn Guest API scraper extracting verified job IDs, locations, and live URLs.", table_cell_style)],
@@ -295,7 +295,7 @@ def build_handbook_pdf(output_path: str):
 
     steps = [
         ("Step 1: UI Trigger (React)", "Candidate selects domain/location (e.g. 'React Developer in Bengaluru') and clicks Find Jobs."),
-        ("Step 2: Bridge Client (drcDiscoveryApi.ts)", "Constructs typed <code>CandidateSearchPayload</code> and dispatches <code>POST /api/jobs/search</code>."),
+        ("Step 2: Bridge Client (quickjobDiscoveryApi.ts)", "Constructs typed <code>CandidateSearchPayload</code> and dispatches <code>POST /api/jobs/search</code>."),
         ("Step 3: Vite Dev Proxy / Nginx Gateway", "Forwards request from port 5173 to local microservice on port 5055 with sub-millisecond latency."),
         ("Step 4: FastAPI Router (api_server.py)", "Validates payload via Pydantic model and invokes <code>execute_fresh_batch_discovery()</code>."),
         ("Step 5: Parallel Dual-Source Ingestion", "Spawns concurrent worker threads querying LinkedIn Guest API (Source 1) and Direct ATS Portals (Source 2)."),
@@ -339,7 +339,7 @@ server: {
     story.append(t_code1)
     story.append(Spacer(1, 6))
 
-    story.append(Paragraph("Frontend API Client Methods (<code>src/lib/drcDiscoveryApi.ts</code>):", h2_style))
+    story.append(Paragraph("Frontend API Client Methods (<code>src/lib/quickjobDiscoveryApi.ts</code>):", h2_style))
     
     api_table_data = [
         [Paragraph("<b>Function</b>", table_header_style), Paragraph("<b>HTTP Route</b>", table_header_style), Paragraph("<b>Payload / Return Type</b>", table_header_style)],
@@ -530,8 +530,8 @@ public class JobDiscoveryService {
     print(f"Successfully generated PDF at: {output_path}")
 
 if __name__ == '__main__':
-    project_pdf = r"D:\Dheeraj Rathod consult\forntend\AiJobAssistantFrontEnd-dev\DRC_Job_Search_Engine_Technical_Handbook.pdf"
-    artifact_pdf = r"C:\Users\Dell\.gemini\antigravity\brain\84bace06-5358-4c85-b748-8db069ac3d85\DRC_Job_Search_Engine_Technical_Handbook.pdf"
+    project_pdf = r"D:\QuickJob consult\forntend\AiJobAssistantFrontEnd-dev\QuickJob_Job_Search_Engine_Technical_Handbook.pdf"
+    artifact_pdf = r"C:\Users\Dell\.gemini\antigravity\brain\84bace06-5358-4c85-b748-8db069ac3d85\QuickJob_Job_Search_Engine_Technical_Handbook.pdf"
 
     build_handbook_pdf(project_pdf)
     shutil.copy2(project_pdf, artifact_pdf)

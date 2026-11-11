@@ -10,7 +10,7 @@ import {
   Bookmark,
   ChevronDown,
 } from 'lucide-react';
-import { DiscoveredJobItem } from '../../lib/drcDiscoveryApi';
+import { DiscoveredJobItem } from '../../lib/quickjobDiscoveryApi';
 import { CandidateParsedProfile } from '../../lib/applicationApi';
 import { JobCardNaukri } from './JobCardNaukri';
 import { JobCardErrorBoundary } from './JobCardErrorBoundary';

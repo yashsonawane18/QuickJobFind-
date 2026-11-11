@@ -1,6 +1,6 @@
 // Contract for the Interview Prep Kit (Phase 2).
 // The kit has 7 sections, numbered 1-7 (these mirror sections 3-9 of the full
-// DRC "Interview Preparation Kit" deliverable):
+// QuickJob "Interview Preparation Kit" deliverable):
 //   1. Job Description - Full Breakdown
 //   2. Candidate-Role Fit Analysis
 //   3. Your Unique Selling Points (USPs)

@@ -4,7 +4,7 @@ import {
   Search,
   Compass,
 } from 'lucide-react';
-import { DiscoveredJobItem } from '../../lib/drcDiscoveryApi';
+import { DiscoveredJobItem } from '../../lib/quickjobDiscoveryApi';
 import { JobCardNaukri } from './JobCardNaukri';
 import { JobCardErrorBoundary } from './JobCardErrorBoundary';
 

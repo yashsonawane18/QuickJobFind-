@@ -15,10 +15,11 @@ import {
   ArrowUpRight,
   ExternalLink,
 } from 'lucide-react';
-import { DiscoveredJobItem } from '../../lib/drcDiscoveryApi';
+import { DiscoveredJobItem } from '../../lib/quickjobDiscoveryApi';
 import { CompanyLogo } from './CompanyLogo';
 import { getActiveTheme } from '../../config/themeConfig';
 import discoveryFiltersConfig from '../../config/discoveryFilters.json';
+import { CopyAutoScriptButton } from '../common/CopyAutoScriptButton';
 
 export interface JobCardNaukriProps {
   job: DiscoveredJobItem;
@@ -311,7 +312,10 @@ export const JobCardNaukri: React.FC<JobCardNaukriProps> = ({
         </div>
 
         {/* Clear, High-Contrast Action Buttons */}
-        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end flex-wrap sm:flex-nowrap">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap sm:flex-nowrap">
+          {/* Copy AutoScript */}
+          <CopyAutoScriptButton job={job} variant="card" />
+
           {/* View Details - Visible Secondary Button */}
           <button
             type="button"
@@ -329,7 +333,7 @@ export const JobCardNaukri: React.FC<JobCardNaukriProps> = ({
               onApplyNow?.(job);
             }}
             style={{ backgroundColor: '#00C896', color: '#05130D' }}
-            className="btn-drc-primary flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-[#05130D] text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-[#00C896]/30 active:scale-[0.98]"
+            className="btn-quickjob-primary flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-[#05130D] text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-[#00C896]/30 active:scale-[0.98]"
           >
             <span className="font-extrabold text-[#05130D]">Apply Now</span>
             <ExternalLink className="w-3.5 h-3.5 text-[#05130D] stroke-[2.5]" />

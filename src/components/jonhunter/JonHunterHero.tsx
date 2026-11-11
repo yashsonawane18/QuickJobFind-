@@ -9,7 +9,7 @@ import {
   ShieldCheck,
   X,
 } from 'lucide-react';
-import { IndiaLocationOption } from '../../lib/drcDiscoveryApi';
+import { IndiaLocationOption } from '../../lib/quickjobDiscoveryApi';
 import { getActiveTheme } from '../../config/themeConfig';
 
 export interface JonHunterHeroProps {
@@ -24,7 +24,7 @@ export interface JonHunterHeroProps {
   isSearching?: boolean;
 }
 
-// Experienced roles only (DRC does not apply for freshers)
+// Experienced roles only (QuickJob does not apply for freshers)
 const EXPERIENCED_SENIORITY_OPTIONS = [
   { id: 'all', label: 'All Experienced Roles (2-15+ Yrs)', badge: '2+ Yrs' },
   { id: 'intermediate', label: 'Mid Level Engineer (2-5 Yrs)', badge: '2-5 Yrs' },
@@ -97,23 +97,23 @@ export const JonHunterHero: React.FC<JonHunterHeroProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Brand Pill */}
         <div className="flex items-center justify-center mb-5">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold uppercase tracking-wider shadow-sm">
-            <ShieldCheck className="w-4 h-4 text-[#00C896]" />
-            <span>Direct Corporate Applications &bull; 100% Verified Requisitions</span>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#8B5CF6]/15 border border-[#8B5CF6]/35 text-[#A78BFA] text-xs font-bold uppercase tracking-wider shadow-[0_0_16px_rgba(139,92,246,0.25)]">
+            <Sparkles className="w-3.5 h-3.5 text-[#8B5CF6]" />
+            <span>QuickJob Platform &bull; Find it fast. Land it faster.</span>
           </div>
         </div>
 
-        {/* Clean, Senior Typography */}
+        {/* Clean, Modern Typography */}
         <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.12]">
-            We Apply. You Interview.{' '}
-            <span className="block sm:inline bg-gradient-to-r from-emerald-400 via-[#00C896] to-teal-300 bg-clip-text text-transparent">
-              You Get Hired.
+            Find it fast.{' '}
+            <span className="block sm:inline bg-gradient-to-r from-purple-300 via-[#8B5CF6] to-[#A78BFA] bg-clip-text text-transparent drop-shadow-[0_0_24px_rgba(139,92,246,0.45)]">
+              Land it faster.
             </span>
           </h1>
 
-          <p className="mt-3.5 text-sm sm:text-base text-zinc-300 max-w-2xl mx-auto leading-relaxed">
-            Real-time direct career portal feeds & verified engineering, architecture, and leadership openings across Greenhouse, Lever, Ashby & Workday. Exclusively for experienced candidates (2+ to 15+ years).
+          <p className="mt-3.5 text-sm sm:text-base text-[#A1A1AA] max-w-2xl mx-auto leading-relaxed">
+            Direct company career feeds and verified tech openings across top corporate ATS systems. Track your job search and autofill applications with 1-click AutoScript.
           </p>
         </div>
 
@@ -212,7 +212,7 @@ export const JonHunterHero: React.FC<JonHunterHeroProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowSeniorityDropdown(!showSeniorityDropdown)}
-                  className="w-full flex items-center justify-between ${theme.innerBoxClass} border ${theme.innerBoxBorderClass} hover:border-[#00C896]/50 rounded-xl px-3.5 py-2.5 text-left text-sm transition-colors cursor-pointer"
+                  className={`w-full flex items-center justify-between ${theme.innerBoxClass} border ${theme.innerBoxBorderClass} hover:border-[#00C896]/50 rounded-xl px-3.5 py-2.5 text-left text-sm transition-colors cursor-pointer`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <Briefcase className="w-4 h-4 text-[#00C896] shrink-0" />
@@ -252,7 +252,7 @@ export const JonHunterHero: React.FC<JonHunterHeroProps> = ({
                   type="submit"
                   disabled={isSearching}
                   style={{ backgroundColor: '#00C896', color: '#05130D' }}
-                  className="btn-drc-primary w-full py-2.5 px-4 rounded-xl text-[#05130D] font-extrabold text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-75 shadow-lg active:scale-[0.98]"
+                  className="btn-quickjob-primary w-full py-2.5 px-4 rounded-xl text-[#05130D] font-extrabold text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-75 shadow-lg active:scale-[0.98]"
                 >
                   {isSearching ? (
                     <div className="w-5 h-5 border-2 border-[#05130D] border-t-transparent rounded-full animate-spin" />

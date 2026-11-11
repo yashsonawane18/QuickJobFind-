@@ -3899,20 +3899,52 @@ html {
 body.exclusive-opening-request .mt-5.space-y-4 > div:nth-child(-n+2) { display: none !important; }
 
 
-/* High-contrast DRC Emerald CTA Button */
-.btn-drc-primary {
-  background-color: #00C896 !important;
-  background: linear-gradient(135deg, #00DDA6 0%, #00C896 100%) !important;
-  color: #05130D !important;
+/* QuickJob Design Tokens */
+:root {
+  --bg-primary: #0A0A0A;
+  --card-surface: #141414;
+  --card-border: #262626;
+  --text-primary: #FFFFFF;
+  --text-secondary: #A1A1AA;
+  --purple-accent: #8B5CF6;
+  --purple-hover: #A78BFA;
+  --purple-glow: 0 0 24px rgba(139, 92, 246, 0.45);
+}
+
+/* QuickJob Primary Button with Soft Purple Glow */
+.btn-quickjob-primary,
+.btn-quickjob-primary {
+  background-color: #8B5CF6 !important;
+  background: linear-gradient(135deg, #9333EA 0%, #8B5CF6 100%) !important;
+  color: #FFFFFF !important;
   font-weight: 800 !important;
-  box-shadow: 0 4px 14px 0 rgba(0, 200, 150, 0.35) !important;
-  border: 1px solid rgba(0, 200, 150, 0.5) !important;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.45) !important;
+  border: 1px solid rgba(167, 139, 250, 0.5) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
-.btn-drc-primary:hover {
-  background-color: #00E5AA !important;
-  background: linear-gradient(135deg, #10F0B7 0%, #00DDA6 100%) !important;
-  box-shadow: 0 6px 20px 0 rgba(0, 200, 150, 0.5) !important;
+.btn-quickjob-primary:hover,
+.btn-quickjob-primary:hover {
+  background-color: #A78BFA !important;
+  background: linear-gradient(135deg, #A855F7 0%, #9333EA 100%) !important;
+  box-shadow: 0 0 28px rgba(139, 92, 246, 0.65) !important;
+  transform: translateY(-1px);
 }
-.btn-drc-primary:active {
+.btn-quickjob-primary:active,
+.btn-quickjob-primary:active {
   transform: scale(0.98);
+}
+
+/* Purple Glow Utility Classes */
+.quickjob-glow {
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.45) !important;
+}
+.quickjob-glow-sm {
+  box-shadow: 0 0 14px rgba(139, 92, 246, 0.35) !important;
+}
+.quickjob-card-hover {
+  transition: all 0.2s ease;
+}
+.quickjob-card-hover:hover {
+  border-color: rgba(139, 92, 246, 0.6) !important;
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.35) !important;
 }

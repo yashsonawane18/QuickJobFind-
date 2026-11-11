@@ -1,5 +1,5 @@
 """
-DRC Job Assistant - Advanced Enterprise ATS Matching & Multi-Query Job Engine (job_matcher.py)
+QuickJob Platform - Advanced Enterprise ATS Matching & Multi-Query Job Engine (job_matcher.py)
 Features:
 1. Dynamic Query Expansion & Boolean Search Matrix
 2. Multi-Dimensional Weighted ATS Compatibility Scoring (Core Tech, Seniority, Gaussian Experience Fit)
@@ -911,7 +911,7 @@ def fetch_live_linkedin_jobs_for_role(
     is_preview_query = (
         "preview" in cand_email.lower()
         or cand_email.startswith("visitor_")
-        or cand_email == "visitor.preview@drc.com"
+        or cand_email == "visitor.preview@quickjob.internal"
     )
 
     # Preload candidate-specific historical fingerprints for O(1) deduplication (only for real candidates)
@@ -1133,7 +1133,7 @@ def find_matching_jobs(
     is_preview_query = (
         "preview" in cand_email.lower()
         or cand_email.startswith("visitor_")
-        or cand_email == "visitor.preview@drc.com"
+        or cand_email == "visitor.preview@quickjob.internal"
     )
 
     console.print(f"[cyan][JobMatcher] Searching Top 5 Fresh (24h-7d) Jobs for '{candidate.name}' ({search_role}) [{experience_level}] in {search_loc}...[/cyan]")

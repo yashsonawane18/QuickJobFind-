@@ -6,8 +6,13 @@ import {
   Bookmark,
   Menu,
   X,
+  Shield,
+  LogOut,
+  User,
 } from 'lucide-react';
 import { getActiveTheme } from '../../config/themeConfig';
+import { QuickJobLogo } from '../common/QuickJobLogo';
+import { useUser } from '../../contexts/UserContext';
 
 export type JonHunterNavTab = 'discover' | 'career_pages' | 'recommended' | 'archive' | 'saved' | 'tracker';
 
@@ -19,6 +24,7 @@ export interface JonHunterNavProps {
   totalDiscoveredCount?: number;
   onNavigateHome?: () => void;
   onNavigateSignIn?: () => void;
+  onNavigateAdmin?: () => void;
   engineOnline?: boolean | null;
 }
 
@@ -26,11 +32,14 @@ export const JonHunterNav: React.FC<JonHunterNavProps> = ({
   activeTab,
   onTabChange,
   savedCount = 0,
+  onNavigateAdmin,
+  onNavigateSignIn,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const theme = getActiveTheme();
+  const { user, isAdmin, isAuthenticated, logout } = useUser();
 
-  // Clean, professional, uncluttered navigation items
+  // Navigation items
   const navItems = [
     {
       id: 'discover' as JonHunterNavTab,
@@ -56,29 +65,22 @@ export const JonHunterNav: React.FC<JonHunterNavProps> = ({
   ];
 
   return (
-    <nav className={`sticky top-0 z-30 ${theme.navClass} border-b text-white`}>
+    <nav className="sticky top-0 z-30 bg-[#0A0A0A]/95 backdrop-blur-md border-b border-[#262626] text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Official Brand Logo - Clean & Prominent */}
-          <div className="flex items-center">
-            <a
-              href="/discover"
-              onClick={(e) => {
-                e.preventDefault();
-                onTabChange('discover');
-              }}
+          {/* QuickJob Text Logo */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => onTabChange('discover')}
               className="flex items-center group cursor-pointer focus:outline-none"
             >
-              <img
-                src="/drc-logo-white.png"
-                alt="Dheeraj Rathod Consult"
-                className="h-9 sm:h-10 w-auto object-contain transition-opacity duration-200 group-hover:opacity-90"
-              />
-            </a>
+              <QuickJobLogo size="md" />
+            </button>
           </div>
 
-          {/* Center: Simplified Navigation Tabs */}
-          <div className="hidden md:flex items-center gap-1 p-1 rounded-xl bg-[#0B1017]/90 border border-[#182230] shadow-inner">
+          {/* Center: Navigation Tabs */}
+          <div className="hidden md:flex items-center gap-1 p-1 rounded-xl bg-[#141414] border border-[#262626] shadow-inner">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -89,11 +91,9 @@ export const JonHunterNav: React.FC<JonHunterNavProps> = ({
                   key={item.id}
                   type="button"
                   onClick={() => onTabChange(item.id)}
-                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer ${
                     isActive
-                      ? isSavedTab
-                        ? 'bg-amber-400 text-black font-extrabold shadow-sm'
-                        : 'bg-[#00C896] text-[#05130D] font-extrabold shadow-md shadow-[#00C896]/20'
+                      ? 'bg-gradient-to-r from-[#8B5CF6] to-[#7C3AED] text-white font-bold shadow-[0_0_16px_rgba(139,92,246,0.45)]'
                       : isSavedTab
                       ? 'text-zinc-300 hover:text-amber-300 hover:bg-white/5'
                       : 'text-zinc-300 hover:text-white hover:bg-white/5'
@@ -102,9 +102,7 @@ export const JonHunterNav: React.FC<JonHunterNavProps> = ({
                   <Icon
                     className={`w-3.5 h-3.5 ${
                       isActive
-                        ? isSavedTab
-                          ? 'fill-black text-black'
-                          : 'text-[#05130D]'
+                        ? 'text-white'
                         : isSavedTab && typeof item.count === 'number' && item.count > 0
                         ? 'text-amber-400 fill-amber-400'
                         : 'text-zinc-400'
@@ -116,7 +114,7 @@ export const JonHunterNav: React.FC<JonHunterNavProps> = ({
                     <span
                       className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md ${
                         isActive
-                          ? 'bg-black/25 text-black'
+                          ? 'bg-black/30 text-white'
                           : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                       }`}
                     >
@@ -128,23 +126,77 @@ export const JonHunterNav: React.FC<JonHunterNavProps> = ({
             })}
           </div>
 
-          {/* Right: Live Radar Status Indicator */}
-          <div className="hidden sm:flex items-center">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0E1520] border border-[#1B2636] text-xs text-zinc-300 shadow-sm">
+          {/* Right: Auth, Admin Console, and Live Radar */}
+          <div className="hidden sm:flex items-center gap-3">
+            {/* Live Opportunities Count */}
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#141414] border border-[#262626] text-xs text-zinc-300">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#8B5CF6] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#8B5CF6]" />
               </span>
-              <span className="font-mono font-medium text-white tracking-tight">9,295+ Verified Openings</span>
+              <span className="font-mono text-zinc-300 text-[11px]">9,295+ Verified Openings</span>
             </div>
+
+            {/* Admin Console Shortcut */}
+            {isAdmin && onNavigateAdmin && (
+              <button
+                type="button"
+                onClick={onNavigateAdmin}
+                className="px-3 py-1.5 rounded-xl bg-[#8B5CF6]/15 hover:bg-[#8B5CF6]/25 border border-[#8B5CF6]/40 text-[#A78BFA] text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(139,92,246,0.25)] hover:shadow-[0_0_18px_rgba(139,92,246,0.45)]"
+                title="Open Admin User Approval Console"
+              >
+                <Shield className="w-3.5 h-3.5 text-[#8B5CF6]" />
+                <span>Admin</span>
+              </button>
+            )}
+
+            {/* User Profile / Logout */}
+            {isAuthenticated && user ? (
+              <div className="flex items-center gap-2 pl-2 border-l border-[#262626]">
+                <div className="flex items-center gap-1.5 text-xs text-zinc-300">
+                  <div className="w-6 h-6 rounded-full bg-[#8B5CF6]/20 border border-[#8B5CF6]/40 flex items-center justify-center text-[10px] font-bold text-[#A78BFA]">
+                    {user.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  <span className="hidden xl:inline max-w-[120px] truncate font-medium text-zinc-200">
+                    {user.full_name}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                  title="Sign Out"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={onNavigateSignIn}
+                className="px-3.5 py-1.5 rounded-xl bg-[#8B5CF6] hover:bg-[#A78BFA] text-white text-xs font-bold transition-all cursor-pointer shadow-[0_0_14px_rgba(139,92,246,0.4)]"
+              >
+                Sign In
+              </button>
+            )}
           </div>
 
           {/* Mobile Menu Hamburger */}
           <div className="flex md:hidden items-center gap-2">
+            {isAdmin && onNavigateAdmin && (
+              <button
+                type="button"
+                onClick={onNavigateAdmin}
+                className="p-1.5 rounded-lg bg-[#8B5CF6]/20 text-[#A78BFA] border border-[#8B5CF6]/40 text-xs font-bold"
+              >
+                Admin
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1.5 rounded-lg text-zinc-300 hover:text-white bg-[#0E1520] border border-[#1B2636] cursor-pointer"
+              className="p-1.5 rounded-lg text-zinc-300 hover:text-white bg-[#141414] border border-[#262626] cursor-pointer"
               aria-label="Toggle navigation tabs"
             >
               {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -155,7 +207,7 @@ export const JonHunterNav: React.FC<JonHunterNavProps> = ({
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className={`md:hidden ${theme.navClass} border-b px-4 pt-2 pb-3 space-y-1`}>
+        <div className="md:hidden bg-[#141414] border-b border-[#262626] px-4 pt-2 pb-3 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -171,10 +223,8 @@ export const JonHunterNav: React.FC<JonHunterNavProps> = ({
                 }}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer border ${
                   isActive
-                    ? isSavedTab
-                      ? 'bg-amber-400 text-black border-amber-400 font-bold'
-                      : 'bg-[#00C896] text-[#05130D] border-[#00C896] font-bold'
-                    : 'bg-[#0E1520] text-zinc-200 border-[#1B2636] hover:bg-[#141E2E]'
+                    ? 'bg-[#8B5CF6] text-white border-[#8B5CF6] font-bold shadow-[0_0_12px_rgba(139,92,246,0.4)]'
+                    : 'bg-[#0A0A0A] text-zinc-200 border-[#262626] hover:bg-white/5'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -184,7 +234,7 @@ export const JonHunterNav: React.FC<JonHunterNavProps> = ({
                         ? 'text-inherit'
                         : isSavedTab
                         ? 'text-amber-400'
-                        : 'text-[#00C896]'
+                        : 'text-[#8B5CF6]'
                     }`}
                   />
                   <span>{item.label}</span>
@@ -203,6 +253,19 @@ export const JonHunterNav: React.FC<JonHunterNavProps> = ({
               </button>
             );
           })}
+
+          {isAuthenticated && user && (
+            <div className="pt-2 border-t border-[#262626] flex items-center justify-between px-2 text-xs">
+              <span className="text-zinc-400 truncate">{user.email}</span>
+              <button
+                type="button"
+                onClick={logout}
+                className="text-rose-400 font-semibold"
+              >
+                Sign Out
+              </button>
+            </div>
+          )}
         </div>
       )}
     </nav>

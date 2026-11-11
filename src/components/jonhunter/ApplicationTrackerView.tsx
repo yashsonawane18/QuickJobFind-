@@ -7,7 +7,7 @@ import {
   Compass,
   AlertCircle,
 } from 'lucide-react';
-import { DiscoveredJobItem } from '../../lib/drcDiscoveryApi';
+import { DiscoveredJobItem } from '../../lib/quickjobDiscoveryApi';
 
 export interface ApplicationTrackerViewProps {
   allJobs: DiscoveredJobItem[];
@@ -134,7 +134,7 @@ export const ApplicationTrackerView: React.FC<ApplicationTrackerViewProps> = ({
           </div>
           <h3 className="text-lg font-bold text-white">No Applied Requisitions Tracked</h3>
           <p className="text-sm text-zinc-300 max-w-md mx-auto mt-1 mb-6 leading-relaxed">
-            When you apply to jobs via DRC or mark them as "Applied", they will appear here with real-time status and recruiter follow-ups.
+            When you apply to jobs via QuickJob or mark them as "Applied", they will appear here with real-time status and recruiter follow-ups.
           </p>
           <button
             type="button"

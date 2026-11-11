@@ -20,7 +20,7 @@ import {
   updateJobStatus,
   checkJobEngineHealth,
   getDiscoveredJobsHistory,
-} from '../../lib/drcDiscoveryApi';
+} from '../../lib/quickjobDiscoveryApi';
 import { useUser } from '../../contexts/UserContext';
 import { JobDetailModal, JobDetailData } from '../JobDetailModal';
 import { ApplicationFlowModal } from '../application/ApplicationFlowModal';
@@ -51,6 +51,7 @@ import { getActiveTheme } from '../../config/themeConfig';
 export interface JonHunterJobPortalProps {
   onNavigateHome?: () => void;
   onNavigateSignIn?: () => void;
+  onNavigateAdmin?: () => void;
   onNavigateTracker?: () => void;
 }
 
@@ -93,6 +94,7 @@ const sanitizeJobsForCache = (jobs: DiscoveredJobItem[]): DiscoveredJobItem[] =>
 export const JonHunterJobPortal: React.FC<JonHunterJobPortalProps> = ({
   onNavigateHome,
   onNavigateSignIn,
+  onNavigateAdmin,
   onNavigateTracker,
 }) => {
   const { user } = useUser();
@@ -123,11 +125,11 @@ export const JonHunterJobPortal: React.FC<JonHunterJobPortalProps> = ({
   // Jobs state
   const [jobsList, setJobsList] = useState<DiscoveredJobItem[]>([]);
   const [allDiscoveredJobs, setAllDiscoveredJobs] = useState<DiscoveredJobItem[]>(() => {
-    return safeStorage.getItem<DiscoveredJobItem[]>('drc_discovered_all_jobs_v2', []);
+    return safeStorage.getItem<DiscoveredJobItem[]>('quickjob_discovered_all_jobs_v2', []);
   });
 
   const [savedJobIds, setSavedJobIds] = useState<string[]>(() => {
-    return safeStorage.getItem<string[]>('drc_starred_job_ids_v2', []);
+    return safeStorage.getItem<string[]>('quickjob_starred_job_ids_v2', []);
   });
 
   // Offline recovery & Diagnostics state
@@ -167,7 +169,7 @@ export const JonHunterJobPortal: React.FC<JonHunterJobPortalProps> = ({
   const [selectedJobForApplication, setSelectedJobForApplication] = useState<DiscoveredJobItem | null>(null);
 
   // User candidate identity
-  const candidateEmail = user?.email || 'guest_consulting@drc.internal';
+  const candidateEmail = user?.email || 'candidate@quickjob.internal';
 
   // 1. Verify Engine Health & Fetch Locations
   const verifyEngine = useCallback(async () => {
@@ -195,7 +197,7 @@ export const JonHunterJobPortal: React.FC<JonHunterJobPortalProps> = ({
   useEffect(() => {
     // Purge any stale cache entries older than 7 days so user never sees obsolete jobs
     try {
-      const stored = safeStorage.getItem<DiscoveredJobItem[]>('drc_discovered_all_jobs_v2', []);
+      const stored = safeStorage.getItem<DiscoveredJobItem[]>('quickjob_discovered_all_jobs_v2', []);
       if (Array.isArray(stored) && stored.length > 0) {
         const now = Date.now();
         const maxAgeMs = 7 * 24 * 60 * 60 * 1000;
@@ -205,7 +207,7 @@ export const JonHunterJobPortal: React.FC<JonHunterJobPortalProps> = ({
           return !isNaN(t) && (now - t) < maxAgeMs;
         });
         if (fresh.length !== stored.length) {
-          safeStorage.setItem('drc_discovered_all_jobs_v2', fresh);
+          safeStorage.setItem('quickjob_discovered_all_jobs_v2', fresh);
           setAllDiscoveredJobs(fresh);
         }
       }
@@ -224,7 +226,7 @@ export const JonHunterJobPortal: React.FC<JonHunterJobPortalProps> = ({
           });
           const poolToUse = recentJobs.length > 0 ? recentJobs : res.all_jobs;
           setAllDiscoveredJobs(poolToUse);
-          safeStorage.setItem('drc_discovered_all_jobs_v2', sanitizeJobsForCache(poolToUse));
+          safeStorage.setItem('quickjob_discovered_all_jobs_v2', sanitizeJobsForCache(poolToUse));
           setJobsList((prev) => (prev.length === 0 ? poolToUse.slice(0, 20) : prev));
         }
       })
@@ -309,7 +311,7 @@ export const JonHunterJobPortal: React.FC<JonHunterJobPortalProps> = ({
         if (newlyDiscoveredIds.length > 0) {
           setSavedJobIds((prev) => {
             const next = Array.from(new Set([...prev, ...newlyDiscoveredIds]));
-            safeStorage.setItem('drc_starred_job_ids_v2', next);
+            safeStorage.setItem('quickjob_starred_job_ids_v2', next);
             return next;
           });
         }
@@ -332,7 +334,7 @@ export const JonHunterJobPortal: React.FC<JonHunterJobPortalProps> = ({
             if (!map.has(key)) map.set(key, j);
           });
           const merged = Array.from(map.values());
-          safeStorage.setItem('drc_discovered_all_jobs_v2', sanitizeJobsForCache(merged));
+          safeStorage.setItem('quickjob_discovered_all_jobs_v2', sanitizeJobsForCache(merged));
           return merged;
         });
       } catch (err: any) {
@@ -623,7 +625,7 @@ export const JonHunterJobPortal: React.FC<JonHunterJobPortalProps> = ({
     const jobId = job.id;
     setSavedJobIds((prev) => {
       const next = prev.includes(jobId) ? prev.filter((id) => id !== jobId) : [...prev, jobId];
-      safeStorage.setItem('drc_starred_job_ids_v2', next);
+      safeStorage.setItem('quickjob_starred_job_ids_v2', next);
       if (prev.includes(jobId)) {
         toast.info('Removed from saved jobs');
       } else {
@@ -645,7 +647,7 @@ export const JonHunterJobPortal: React.FC<JonHunterJobPortalProps> = ({
       );
       setAllDiscoveredJobs((prev) => {
         const updated = prev.map((j) => (j.id === job.id ? { ...j, status: nextStatus, remarks: remark } : j));
-        safeStorage.setItem('drc_discovered_all_jobs_v2', sanitizeJobsForCache(updated));
+        safeStorage.setItem('quickjob_discovered_all_jobs_v2', sanitizeJobsForCache(updated));
         return updated;
       });
       toast.success(`Job marked as ${nextStatus}`);
@@ -664,7 +666,7 @@ export const JonHunterJobPortal: React.FC<JonHunterJobPortalProps> = ({
       );
       setAllDiscoveredJobs((prev) => {
         const updated = prev.map((j) => (j.id === job.id ? { ...j, remarks: remarkText } : j));
-        safeStorage.setItem('drc_discovered_all_jobs_v2', sanitizeJobsForCache(updated));
+        safeStorage.setItem('quickjob_discovered_all_jobs_v2', sanitizeJobsForCache(updated));
         return updated;
       });
       toast.success('Note saved successfully');
@@ -1005,6 +1007,7 @@ export const JonHunterJobPortal: React.FC<JonHunterJobPortalProps> = ({
         totalDiscoveredCount={allDiscoveredJobs.length > 0 ? allDiscoveredJobs.length : 1500}
         onNavigateHome={onNavigateHome}
         onNavigateSignIn={onNavigateSignIn}
+        onNavigateAdmin={onNavigateAdmin}
         engineOnline={engineOnline}
       />
 

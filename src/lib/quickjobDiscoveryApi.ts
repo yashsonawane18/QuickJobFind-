@@ -3,13 +3,13 @@ import { safeStorage } from './storage/safeStorage';
 import { ApiError } from './errors/AppError';
 import { errorLogger } from './errors/errorLogger';
 
-let cachedWorkingEngineUrl: string | null = safeStorage.getItem<string | null>('drc_working_engine_url', null, 'session');
+let cachedWorkingEngineUrl: string | null = safeStorage.getItem<string | null>('quickjob_working_engine_url', null, 'session');
 
 export function setCachedWorkingEngineUrl(url: string | null): void {
   if (url === null || url === undefined) return;
   const cleanUrl = url.replace(/\/$/, '');
   cachedWorkingEngineUrl = cleanUrl;
-  safeStorage.setItem('drc_working_engine_url', cleanUrl, 'session');
+  safeStorage.setItem('quickjob_working_engine_url', cleanUrl, 'session');
 }
 
 export function getCachedWorkingEngineUrl(): string | null {
@@ -380,7 +380,7 @@ export async function searchInstantJobs(
         userMessage: 'Job discovery engine reported an issue. Falling back to local verified requisitions...',
       });
     } catch (e: any) {
-      errorLogger.warn('drcDiscoveryApi', `Probe ${url} error: ${e?.message}`);
+      errorLogger.warn('quickjobDiscoveryApi', `Probe ${url} error: ${e?.message}`);
       lastError = new ApiError(e?.message || 'Connection error', {
         category: 'NETWORK_OFFLINE',
         endpoint: url,
@@ -401,7 +401,7 @@ export async function searchInstantJobs(
       };
     }
   } catch (directErr) {
-    errorLogger.warn('drcDiscoveryApi', `Direct ATS failover notice: ${directErr}`);
+    errorLogger.warn('quickjobDiscoveryApi', `Direct ATS failover notice: ${directErr}`);
   }
 
   throw lastError || new ApiError('Unable to reach Job Discovery Engine.', { category: 'NETWORK_OFFLINE' });

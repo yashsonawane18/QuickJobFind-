@@ -1,12 +1,12 @@
 """
-DRC Job Assistant - Real-Time Company Career Pages & ATS Ingestion Engine (career_pages_engine.py)
+QuickJob Platform - Real-Time Company Career Pages & ATS Ingestion Engine (career_pages_engine.py)
 Capability Metric:
 - Total Registered Employers: 859 Companies
 - ATS Provider Distribution: Greenhouse (545), Ashby (165), Lever (108), SmartRecruiters (41)
 - Worldwide Remote Hiring: 667 Companies (77.6%)
 - India Metro & GCC Hiring: 246 Companies (28.6%)
 - Live Indexing Throughput: 8,500 – 11,200+ Jobs per warmup cycle
-- Persistent SQLite Storage: 1,787+ Verified Jobs across 791 Employers (SQLite WAL mode drc_job_discovery.db with SHA-256 deduplication)
+- Persistent SQLite Storage: 1,787+ Verified Jobs across 791 Employers (SQLite WAL mode quickjob_discovery.db with SHA-256 deduplication)
 - Query Latency (SLA): 11.79 ms (RAM Cache) / 1.65 ms (SQLite WAL) Sub-20ms SLA guarantee
 """
 
@@ -39,7 +39,7 @@ _SESSION.headers.update({
 
 # Path to 859-employer corporate registry
 _REGISTRY_PATH = os.path.join(os.path.dirname(__file__), "ats_registry_859.json")
-_DB_PATH = os.path.join(os.path.dirname(__file__), "drc_job_discovery.db")
+_DB_PATH = os.path.join(os.path.dirname(__file__), "quickjob_discovery.db")
 
 TARGET_ATS_REGISTRY: List[Dict[str, Any]] = []
 
@@ -422,7 +422,7 @@ def fetch_smartrecruiters_jobs(company_info: Dict[str, Any], query: str) -> List
 _CAREER_CACHE: Dict[str, Tuple[float, List[JobPosting]]] = {}
 
 def query_sqlite_wal_jobs(query: str, limit: int = 15) -> List[JobPosting]:
-    """Queries persistent SQLite WAL storage (drc_job_discovery.db) in <2ms."""
+    """Queries persistent SQLite WAL storage (quickjob_discovery.db) in <2ms."""
     if not os.path.exists(_DB_PATH):
         return []
     postings: List[JobPosting] = []
@@ -522,7 +522,7 @@ def fetch_career_page_jobs(
         cand_role = candidate.get("reference_role") or candidate.get("current_role") or candidate.get("primary_domain") or clean_query
         cand_profile = CandidateProfile(
             name=candidate.get("name", "Candidate"),
-            email=candidate.get("email", "candidate@drc.com"),
+            email=candidate.get("email", "candidate@quickjob.internal"),
             primary_domain=cand_role,
             target_roles=[cand_role] if cand_role else [clean_query],
             top_skills=cand_skills,
@@ -712,7 +712,7 @@ def get_all_career_companies() -> List[Dict[str, Any]]:
     return catalog
 
 def get_career_page_stats() -> Dict[str, Any]:
-    """Returns verified capacity metrics matching DRC Job Assistant specification."""
+    """Returns verified capacity metrics matching QuickJob Platform specification."""
     total_comps = len(TARGET_ATS_REGISTRY) or 859
     gh_count = sum(1 for c in TARGET_ATS_REGISTRY if c.get("ats", "").lower() == "greenhouse") or 545
     ash_count = sum(1 for c in TARGET_ATS_REGISTRY if c.get("ats", "").lower() == "ashby") or 165
@@ -740,7 +740,7 @@ def get_career_page_stats() -> Dict[str, Any]:
             "scope": "Dedicated tech giants, unicorn startups, and multinational capability centers",
         },
         "live_indexing_throughput": "8,500 – 11,200+ Jobs per warmup cycle (~60s concurrent AsyncIO crawler)",
-        "persistent_sqlite_storage": "1,787+ Verified Jobs across 791 Employers (SQLite WAL mode drc_job_discovery.db with SHA-256 deduplication)",
+        "persistent_sqlite_storage": "1,787+ Verified Jobs across 791 Employers (SQLite WAL mode quickjob_discovery.db with SHA-256 deduplication)",
         "query_latency_sla": {
             "ram_cache": "11.79 ms",
             "sqlite_wal": "1.65 ms",

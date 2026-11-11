@@ -1,5 +1,5 @@
 """
-Script to build the verified 859-employer corporate ATS registry for DRC Job Assistant.
+Script to build the verified 859-employer corporate ATS registry for QuickJob Platform.
 Matches the exact specification:
 - Total: 859 Companies
 - Greenhouse: 545
@@ -98,7 +98,7 @@ def slugify(text: str) -> str:
 
 def build_registry():
     # 1. Gather all unique company names from DB
-    conn = sqlite3.connect('D:/Dheeraj Rathod consult/forntend/AiJobAssistantFrontEnd-dev/job_engine/drc_job_discovery.db')
+    conn = sqlite3.connect('D:/QuickJob consult/forntend/AiJobAssistantFrontEnd-dev/job_engine/quickjob_discovery.db')
     c = conn.cursor()
     db_raw = [r[0].strip() for r in c.execute('SELECT DISTINCT company FROM discovered_jobs WHERE company IS NOT NULL AND company != \'\'').fetchall()]
     conn.close()
@@ -314,7 +314,7 @@ def build_registry():
     print(f"Worldwide Remote: {sum(1 for c in combined if c['is_remote'])} ({sum(1 for c in combined if c['is_remote'])/len(combined)*100:.1f}%)")
     print(f"India GCC: {sum(1 for c in combined if c['is_india_gcc'])} ({sum(1 for c in combined if c['is_india_gcc'])/len(combined)*100:.1f}%)")
 
-    out_path = 'D:/Dheeraj Rathod consult/forntend/AiJobAssistantFrontEnd-dev/job_engine/ats_registry_859.json'
+    out_path = 'D:/QuickJob consult/forntend/AiJobAssistantFrontEnd-dev/job_engine/ats_registry_859.json'
     with open(out_path, 'w', encoding='utf-8') as f:
         json.dump(combined, f, indent=2)
     print(f"Saved verified registry to {out_path}")

@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   X,
   Target,
+  Sparkles,
 } from 'lucide-react';
 import { CandidateParsedProfile } from '../../lib/applicationApi';
 import { toast } from 'sonner';
@@ -63,7 +64,7 @@ export const ResumeAtsBanner: React.FC<ResumeAtsBannerProps> = ({
   };
 
   return (
-    <div className="bg-gradient-to-r from-[#0C131D] via-[#0E1622] to-[#0A121A] border border-[#1E2C3D] rounded-2xl p-5 sm:p-6 shadow-2xl text-white">
+    <div className="bg-[#141414] border border-[#262626] hover:border-[#8B5CF6]/30 rounded-2xl p-5 sm:p-6 shadow-2xl text-white transition-all">
       <input
         ref={fileInputRef}
         type="file"
@@ -75,14 +76,14 @@ export const ResumeAtsBanner: React.FC<ResumeAtsBannerProps> = ({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
         {/* Left: Value Proposition */}
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 shrink-0 shadow-inner">
-            <Target className="w-6 h-6 text-emerald-400" />
+          <div className="w-12 h-12 rounded-2xl bg-[#8B5CF6]/15 border border-[#8B5CF6]/35 flex items-center justify-center text-[#8B5CF6] shrink-0 shadow-[0_0_16px_rgba(139,92,246,0.25)]">
+            <Target className="w-6 h-6 text-[#A78BFA]" />
           </div>
 
           <div>
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/15 px-2.5 py-0.5 rounded-md border border-emerald-500/30">
-                DRC ATS Scoring Engine
+              <span className="text-xs font-bold uppercase tracking-wider text-[#A78BFA] bg-[#8B5CF6]/15 px-2.5 py-0.5 rounded-md border border-[#8B5CF6]/30">
+                QuickJob ATS Scoring Engine
               </span>
               <span className="text-xs text-zinc-400 font-mono">
                 Instant Profile Match
@@ -95,27 +96,28 @@ export const ResumeAtsBanner: React.FC<ResumeAtsBannerProps> = ({
                 : 'Upload Your Resume to Unlock 70–100% Match Scores'}
             </h3>
 
-            <p className="text-xs sm:text-sm text-zinc-300 max-w-xl mt-1 leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#A1A1AA] max-w-xl mt-1 leading-relaxed">
               {resumeProfile ? (
                 <span>
-                  Extracted {resumeProfile.skills?.length || 0} core competencies. Live match scores are displayed on all job cards below.
+                  Showing real-time match rankings based on your core skills:{' '}
+                  <strong className="text-white">
+                    {(resumeProfile.top_skills || []).slice(0, 4).join(', ') || 'General Engineering'}
+                  </strong>.
                 </span>
               ) : (
-                <span>
-                  Our engine instantly maps your technical stack to identify roles where your interview conversion rate is highest.
-                </span>
+                'Our deterministic zero-LLM parser indexes your top competencies in under 100ms and ranks all openings by strict keyword and domain compatibility.'
               )}
             </p>
           </div>
         </div>
 
-        {/* Right: Upload / Active File Controls */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Right: Upload Button or Active File Badge */}
+        <div className="shrink-0 flex items-center gap-3">
           {resumeProfile ? (
-            <div className="flex items-center gap-2.5 bg-[#141C27] border border-emerald-500/50 rounded-xl px-4 py-2 shadow-sm">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span className="text-xs font-semibold text-white truncate max-w-[180px]">
-                {resumeFileName || 'Resume Loaded'}
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#0A0A0A] border border-[#262626] text-xs text-zinc-300">
+              <CheckCircle2 className="w-4 h-4 text-[#8B5CF6] shrink-0" />
+              <span className="font-semibold text-white truncate max-w-[160px]" title={resumeFileName}>
+                {resumeFileName || 'Resume Attached'}
               </span>
               <button
                 type="button"
@@ -131,18 +133,17 @@ export const ResumeAtsBanner: React.FC<ResumeAtsBannerProps> = ({
               type="button"
               disabled={isParsing}
               onClick={() => fileInputRef.current?.click()}
-              style={{ backgroundColor: '#00C896', color: '#05130D' }}
-              className="btn-drc-primary px-5 py-2.5 rounded-xl text-[#05130D] font-extrabold text-xs shadow-md shadow-[#00C896]/30 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-75 active:scale-[0.98]"
+              className="btn-quickjob-primary px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#8B5CF6] to-[#7C3AED] hover:from-[#A78BFA] hover:to-[#8B5CF6] text-white font-bold text-xs shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all cursor-pointer flex items-center gap-2 disabled:opacity-75 active:scale-[0.98]"
             >
               {isParsing ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-[#05130D] border-t-transparent rounded-full animate-spin" />
-                  <span className="font-extrabold text-[#05130D]">Scanning Profile...</span>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="font-bold text-white">Scanning Profile...</span>
                 </>
               ) : (
                 <>
-                  <Upload className="w-4 h-4 text-[#05130D] stroke-[2.5]" />
-                  <span className="font-extrabold text-[#05130D]">Upload Resume (PDF / DOCX)</span>
+                  <Upload className="w-4 h-4 text-white stroke-[2.5]" />
+                  <span className="font-bold text-white">Upload Resume (PDF / DOCX)</span>
                 </>
               )}
             </button>

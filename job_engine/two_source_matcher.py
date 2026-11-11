@@ -1,5 +1,5 @@
 """
-DRC Job Assistant - Two-Source Matcher & Deduplication Orchestrator (two_source_matcher.py)
+QuickJob Platform - Two-Source Matcher & Deduplication Orchestrator (two_source_matcher.py)
 Coordinates parallel ingestion from:
 1. Source A: LinkedIn Curated Postings (with real LinkedIn Job IDs & Direct View URLs)
 2. Source B: Corporate Career Pages & ATS Feeds (Greenhouse, Lever, Ashby, Enterprise Portals)

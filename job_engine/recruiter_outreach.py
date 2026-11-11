@@ -1,5 +1,5 @@
 """
-DRC Job Assistant - Real-World Recruiter & Company People Discovery (recruiter_outreach.py)
+QuickJob Platform - Real-World Recruiter & Company People Discovery (recruiter_outreach.py)
 Extracts and verifies REAL, currently-employed human recruiters and HR managers for target companies,
 providing direct personal LinkedIn URLs (https://www.linkedin.com/in/...), corporate email predictions,
 Apollo.io email links, and personalized first-name connection notes under 300 characters.

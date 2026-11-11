@@ -1,5 +1,5 @@
 """
-Builds and verifies the expanded 650+ corporate ATS registry for DRC Job Assistant.
+Builds and verifies the expanded 650+ corporate ATS registry for QuickJob Platform.
 Requirements:
 1. Minimum 500 companies worldwide that hire for remote roles.
 2. Minimum 100 companies hiring in India, covering both remote and onsite roles.

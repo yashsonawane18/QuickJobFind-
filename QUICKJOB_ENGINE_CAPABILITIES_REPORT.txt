@@ -1,12 +1,12 @@
 ================================================================================
-DRC JONHUNTER JOB DISCOVERY & SCRAPING ENGINE
+QuickJob JONHUNTER JOB DISCOVERY & SCRAPING ENGINE
 TECHNICAL CAPABILITIES & CAPACITY BENCHMARK REPORT
 ================================================================================
 Generated: 2026-10-18
 Engine Architecture: Zero-Cost Deterministic Hybrid Crawler & Real-Time Indexer
 Repository: JonHunter AI Job Assistant (Production Core)
 Operating Runtime: Python 3.12+ (AsyncIO Concurrent Worker Engine) + SQLite WAL
-Persistent Database: job_engine/data/drc_job_discovery.db
+Persistent Database: job_engine/data/quickjob_discovery.db
 Telemetry Status: 100% Verified Live Production Metrics
 ================================================================================
 
@@ -29,7 +29,7 @@ TABLE OF CONTENTS
 ================================================================================
 1. EXECUTIVE SUMMARY & SYSTEM OVERVIEW
 ================================================================================
-The DRC JonHunter Job Search & Scraping Engine is a high-throughput, enterprise-grade 
+The QuickJob JonHunter Job Search & Scraping Engine is a high-throughput, enterprise-grade 
 job discovery pipeline engineered to continuously crawl, parse, index, and query 
 career requisitions across tier-1 tech enterprises, high-growth startups, and 
 multinational Global Capability Centers (GCCs).
@@ -178,7 +178,7 @@ Data Ingestion & Storage Hierarchy:
     - Query Latency: ~10ms.
     - Tokenized inverse-index keyword lookup with word-boundary matchers.
 
-  Level 2: Persistent SQLite WAL Database (job_engine/data/drc_job_discovery.db)
+  Level 2: Persistent SQLite WAL Database (job_engine/data/quickjob_discovery.db)
     - Table: `discovered_jobs` (Indexed on job_id, title, company, location, source).
     - Current Active Verified Jobs in Storage: 1,787 Requisitions across 791 Employers.
     - Source Breakdown in Database:
@@ -276,5 +276,5 @@ B. Zero-Cost Architectural Blueprint:
       locally as a lightweight developer daemon).
 
 ================================================================================
-END OF REPORT - DRC JONHUNTER JOB DISCOVERY & SCRAPING ENGINE
+END OF REPORT - QuickJob JONHUNTER JOB DISCOVERY & SCRAPING ENGINE
 ================================================================================

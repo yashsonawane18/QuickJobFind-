@@ -7,7 +7,7 @@ import {
   IndianRupee,
   MapPin,
 } from 'lucide-react';
-import { DiscoveredJobItem, searchInstantJobs } from '../../lib/drcDiscoveryApi';
+import { DiscoveredJobItem, searchInstantJobs } from '../../lib/quickjobDiscoveryApi';
 import { CompanyLogo } from './CompanyLogo';
 
 export interface RecommendedJobsSectionProps {
@@ -17,7 +17,7 @@ export interface RecommendedJobsSectionProps {
   onToggleStar: (job: DiscoveredJobItem) => void;
 }
 
-// 6 required roles for experienced candidates (DRC does not apply for freshers)
+// 6 required roles for experienced candidates (QuickJob does not apply for freshers)
 export const RECOMMENDED_ROLE_TABS = [
   {
     id: 'ai_ml',

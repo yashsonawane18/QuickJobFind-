@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Check, CheckSquare, Square, Building2, MapPin, DollarSign, ArrowRight, ArrowLeft, Loader2, Briefcase } from 'lucide-react';
 import { CandidateParsedProfile, fetchJobRecommendations } from '../../lib/applicationApi';
-import { DiscoveredJobItem } from '../../lib/drcDiscoveryApi';
+import { DiscoveredJobItem } from '../../lib/quickjobDiscoveryApi';
 
 interface StepRecommendationsProps {
   candidateProfile: CandidateParsedProfile;

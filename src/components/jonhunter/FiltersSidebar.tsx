@@ -40,7 +40,7 @@ export interface FiltersSidebarProps {
   onNavigateTracker?: () => void;
 }
 
-// Experienced-only seniority bands (DRC does not apply for freshers - Market POV)
+// Experienced-only seniority bands (QuickJob does not apply for freshers - Market POV)
 const EXPERIENCED_SENIORITY_LEVELS = [
   { id: 'all', label: 'All Seniority Levels', sub: '2-15+ Yrs', badge: '2+ Yrs' },
   { id: 'intermediate', label: 'Mid-Level Engineer', sub: 'Individual Contributor', badge: '2-5 Yrs' },
@@ -129,7 +129,7 @@ export const FiltersSidebar: React.FC<FiltersSidebarProps> = ({
         )}
       </div>
 
-      {/* 2. Business POV: DRC Executive Verified Badge & Pipeline Strip */}
+      {/* 2. Business POV: QuickJob Executive Verified Badge & Pipeline Strip */}
       <div className={`p-4 rounded-xl ${theme.innerBoxClass} border ${theme.innerBoxBorderClass} relative overflow-hidden space-y-3`}>
         {/* Subtle accent glow */}
         <div className="absolute top-0 right-0 w-24 h-24 bg-[#00C896]/5 rounded-full blur-xl pointer-events-none" />
@@ -396,7 +396,7 @@ export const FiltersSidebar: React.FC<FiltersSidebarProps> = ({
             <ShieldCheck className="w-3.5 h-3.5" />
           </div>
           <div>
-            <h4 className="text-xs font-bold text-white">DRC Direct Apply Concierge</h4>
+            <h4 className="text-xs font-bold text-white">QuickJob Direct Apply Concierge</h4>
             <span className="text-[10px] text-[#00C896] font-medium">Executive Placement Guarantee</span>
           </div>
         </div>

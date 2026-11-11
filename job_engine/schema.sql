@@ -1,11 +1,11 @@
 -- ============================================================================
--- DRC Job Discovery & Application Platform Database Schema
+-- QuickJob Discovery & Application Platform Database Schema
 -- Compatible with MySQL Workbench 8.0+, MariaDB 10.5+, PostgreSQL & SQLite3
 -- ============================================================================
 
 -- Create database if not exists (Uncomment if setting up a fresh MySQL database)
--- CREATE DATABASE IF NOT EXISTS drc_job_platform CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
--- USE drc_job_platform;
+-- CREATE DATABASE IF NOT EXISTS quickjob_platform CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- USE quickjob_platform;
 
 -- Disable foreign key checks during schema creation
 SET FOREIGN_KEY_CHECKS = 0;

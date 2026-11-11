@@ -6340,14 +6340,14 @@
     "career_url": "https://jobs.ashbyhq.com/dhl"
   },
   {
-    "company": "DRC Partner Tech",
+    "company": "QuickJob Partner Tech",
     "ats": "ashby",
-    "slug": "drcpartnertech",
-    "domain": "drcpartnertech.com",
+    "slug": "quickjobpartnertech",
+    "domain": "quickjobpartnertech.com",
     "default_hub": "Remote / Worldwide",
     "is_remote": true,
     "is_india_gcc": false,
-    "career_url": "https://jobs.ashbyhq.com/drcpartnertech"
+    "career_url": "https://jobs.ashbyhq.com/quickjobpartnertech"
   },
   {
     "company": "DWF",

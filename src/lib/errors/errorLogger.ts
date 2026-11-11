@@ -41,7 +41,7 @@ export const errorLogger = {
     }
 
     // Mirror to native console with appropriate log level
-    const prefix = `[DRC ${source}]`;
+    const prefix = `[QuickJob ${source}]`;
     if (severity === 'fatal' || severity === 'error') {
       console.error(prefix, message, options?.metadata || '');
     } else if (severity === 'warning') {
@@ -104,7 +104,7 @@ export const errorLogger = {
     const location = typeof window !== 'undefined' ? window.location.href : 'Unknown';
 
     const header = [
-      '# DRC System Diagnostics Report',
+      '# QuickJob System Diagnostics Report',
       `Generated: ${new Date().toISOString()}`,
       `URL: ${location}`,
       `Online Status: ${online ? 'ONLINE' : 'OFFLINE'}`,
