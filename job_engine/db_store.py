@@ -17,7 +17,12 @@ from typing import List, Dict, Optional, Any, Tuple, Set
 from config import PROJECT_ROOT
 from models import JobPosting, ConnectionRecord
 
-DB_FILE = PROJECT_ROOT / "drc_job_discovery.db"
+DB_FILE = PROJECT_ROOT / "quickjob_discovery.db"
+if not DB_FILE.exists():
+    fallback_db = PROJECT_ROOT / "quickjob_discovery.db"
+    if fallback_db.exists():
+        import shutil
+        shutil.copy(str(fallback_db), str(DB_FILE))
 _DB_INITIALIZED = False
 _INIT_LOCK = threading.Lock()
 
@@ -233,6 +238,25 @@ def init_db(force: bool = False):
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_rec_company ON verified_recruiters(company_slug);")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_disc_cand_disc_at ON discovered_jobs(candidate_email, discovered_at DESC);")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_disc_cand_status ON discovered_jobs(candidate_email, status);")
+
+        # 10. users table for authentication and admin approval
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            full_name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            role TEXT DEFAULT 'user',
+            status TEXT DEFAULT 'pending',
+            target_role TEXT DEFAULT '',
+            experience_years TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            approved_at TIMESTAMP,
+            approved_by TEXT
+        );
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);")
         conn.commit()
     _DB_INITIALIZED = True
 
@@ -838,7 +862,7 @@ def db_record_candidate_application(app_data: Dict[str, Any]) -> str:
         if job_id:
             cursor.execute("""
             UPDATE discovered_jobs
-            SET status = 'Applied', remarks = 'Applied via 1-Click DRC Direct Portal'
+            SET status = 'Applied', remarks = 'Applied via 1-Click QuickJob Direct Portal'
             WHERE id = ?;
             """, (job_id,))
 
@@ -1191,3 +1215,95 @@ def db_compact_database() -> Dict[str, Any]:
 
 
 
+
+
+# ============================================================================
+# USER AUTHENTICATION & ADMIN MANAGEMENT
+# ============================================================================
+
+def db_create_user(full_name: str, email: str, password_hash: str, role: str = 'user', status: str = 'pending', target_role: str = '', experience_years: str = '') -> Optional[Dict[str, Any]]:
+    norm_email = email.strip().lower()
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO users (full_name, email, password_hash, role, status, target_role, experience_years)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (full_name.strip(), norm_email, password_hash, role, status, target_role.strip(), experience_years.strip()))
+        conn.commit()
+        user_id = cursor.lastrowid
+        return db_get_user_by_id(user_id)
+
+
+def db_get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
+    norm_email = email.strip().lower()
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE LOWER(email) = ?", (norm_email,))
+        row = cursor.fetchone()
+        if row:
+            return dict(row)
+        return None
+
+
+def db_get_user_by_id(user_id: int) -> Optional[Dict[str, Any]]:
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        row = cursor.fetchone()
+        if row:
+            return dict(row)
+        return None
+
+
+def db_list_users(status: Optional[str] = None, search: Optional[str] = None) -> List[Dict[str, Any]]:
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        query = "SELECT id, full_name, email, role, status, target_role, experience_years, created_at, approved_at, approved_by FROM users WHERE 1=1"
+        params: List[Any] = []
+        if status and status.lower() != 'all':
+            query += " AND LOWER(status) = ?"
+            params.append(status.lower().strip())
+        if search and search.strip():
+            query += " AND (LOWER(email) LIKE ? OR LOWER(full_name) LIKE ?)"
+            s = f"%{search.lower().strip()}%"
+            params.extend([s, s])
+        query += " ORDER BY created_at DESC"
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        return [dict(r) for r in rows]
+
+
+def db_update_user_status(user_id: int, status: str, approved_by: Optional[str] = None) -> bool:
+    norm_status = status.lower().strip()
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        if norm_status == 'approved':
+            cursor.execute("""
+                UPDATE users SET status = ?, approved_at = ?, approved_by = ? WHERE id = ?
+            """, (norm_status, now, approved_by or 'admin', user_id))
+        else:
+            cursor.execute("""
+                UPDATE users SET status = ?, approved_by = ? WHERE id = ?
+            """, (norm_status, approved_by or 'admin', user_id))
+        conn.commit()
+        return cursor.rowcount > 0
+
+
+def db_seed_admin(admin_email: str, admin_password_hash: str):
+    norm_email = admin_email.strip().lower()
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM users WHERE LOWER(email) = ?", (norm_email,))
+        row = cursor.fetchone()
+        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        if not row:
+            cursor.execute("""
+                INSERT INTO users (full_name, email, password_hash, role, status, target_role, experience_years, approved_at, approved_by)
+                VALUES (?, ?, ?, 'admin', 'approved', 'Platform Administrator', '10+ Yrs', ?, 'system')
+            """, ("QuickJob Administrator", norm_email, admin_password_hash, now))
+            conn.commit()
+            print(f"[Auth] Seeded initial admin account: {norm_email}")
+        else:
+            cursor.execute("UPDATE users SET role = 'admin', status = 'approved' WHERE id = ?", (row['id'],))
+            conn.commit()

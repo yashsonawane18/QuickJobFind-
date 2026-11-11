@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Activity, Copy, Check, Trash2, Wifi, Database, Server } from 'lucide-react';
 import { toast } from 'sonner';
 import { errorLogger, LogEntry } from '../../lib/errors/errorLogger';
-import { checkJobEngineHealth, getCachedWorkingEngineUrl, getJobEngineCandidates } from '../../lib/drcDiscoveryApi';
+import { checkJobEngineHealth, getCachedWorkingEngineUrl, getJobEngineCandidates } from '../../lib/quickjobDiscoveryApi';
 
 interface DiagnosticsModalProps {
   isOpen: boolean;
@@ -64,7 +64,7 @@ export const DiagnosticsModal: React.FC<DiagnosticsModalProps> = ({ isOpen, onCl
               <Activity className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">DRC System & Error Diagnostics</h3>
+              <h3 className="text-sm font-bold text-white">QuickJob System & Error Diagnostics</h3>
               <p className="text-[11px] text-zinc-400">Telemetry and service connectivity inspection</p>
             </div>
           </div>

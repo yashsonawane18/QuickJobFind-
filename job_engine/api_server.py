@@ -20,11 +20,14 @@ from typing import List, Optional, Dict, Any
 import time
 import uuid
 
-from fastapi import FastAPI, HTTPException, Query, UploadFile, File, Form, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Query, UploadFile, File, Form, BackgroundTasks, Depends, Header, Request, status
 from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
+import bcrypt
+import jwt
+from datetime import datetime, timedelta
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 sys.path.append(str(PROJECT_ROOT))
@@ -50,10 +53,16 @@ from db_store import (
     db_get_recommended_jobs,
     db_prune_old_jobs,
     db_compact_database,
+    db_create_user,
+    db_get_user_by_email,
+    db_get_user_by_id,
+    db_list_users,
+    db_update_user_status,
+    db_seed_admin,
 )
 from ats_calculator import calculate_ats_score
 
-app = FastAPI(title="DRC Consulting Job Discovery & Matching Platform", version="2.0.0")
+app = FastAPI(title="QuickJob Discovery & Matching Platform", version="2.0.0")
 
 # Enable wide-open CORS so any frontend (localhost:5173, Vercel, etc.) can access it
 app.add_middleware(
@@ -63,6 +72,121 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ============================================================================
+# AUTHENTICATION & SECURITY CONFIGURATION
+# ============================================================================
+
+JWT_SECRET = os.getenv("JWT_SECRET", "quickjob_production_secret_key_2025_secure_access")
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRATION_HOURS = 72
+
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@quickjob.io").strip().lower()
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "QuickJobAdmin2025!").strip()
+
+# Rate limiting registry (IP -> timestamps)
+_RATE_LIMIT_STORE: Dict[str, List[float]] = {}
+_RATE_LIMIT_LOCK = threading.Lock()
+
+
+def check_rate_limit(client_ip: str, max_calls: int = 15, window_sec: int = 60) -> bool:
+    """Thread-safe sliding window rate-limiter for login and signup."""
+    now = time.time()
+    with _RATE_LIMIT_LOCK:
+        history = _RATE_LIMIT_STORE.get(client_ip, [])
+        valid_history = [t for t in history if now - t < window_sec]
+        if len(valid_history) >= max_calls:
+            _RATE_LIMIT_STORE[client_ip] = valid_history
+            return False
+        valid_history.append(now)
+        _RATE_LIMIT_STORE[client_ip] = valid_history
+        return True
+
+
+def hash_password(password: str) -> str:
+    salt = bcrypt.gensalt(rounds=12)
+    return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    try:
+        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+    except Exception:
+        return False
+
+
+def create_access_token(user_id: int, email: str, role: str) -> str:
+    payload = {
+        "sub": str(user_id),
+        "email": email,
+        "role": role,
+        "iat": datetime.utcnow(),
+        "exp": datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS)
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def decode_access_token(token: str) -> Dict[str, Any]:
+    return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+
+
+def get_current_user(authorization: Optional[str] = Header(None)) -> Dict[str, Any]:
+    """Dependency to retrieve and validate authenticated user from JWT Bearer token."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authorization token required"
+        )
+    token = authorization.split(" ", 1)[1].strip()
+    try:
+        payload = decode_access_token(token)
+        user_id = int(payload.get("sub", 0))
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired session token"
+        )
+
+    user = db_get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User account not found")
+
+    # Enforce real-time status gating: if rejected or pending, revoke session immediately
+    if user.get("status") != "approved":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Account status is '{user.get('status')}'. Access denied."
+        )
+
+    return user
+
+
+def get_current_admin(current_user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
+    """Dependency enforcing admin role on protected routes."""
+    if current_user.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrator access required for this action"
+        )
+    return current_user
+
+
+# Pydantic schemas for Auth & Admin
+class UserSignupRequest(BaseModel):
+    full_name: str
+    email: str
+    password: str
+    target_role: Optional[str] = ""
+    experience_years: Optional[str] = ""
+
+
+class UserLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class UserStatusUpdateRequest(BaseModel):
+    status: str
 
 init_db()
 
@@ -83,6 +207,12 @@ def _run_periodic_pruning():
 # Background initial warmup on startup
 @app.on_event("startup")
 async def startup_event():
+    # Seed initial platform administrator
+    try:
+        admin_pwd_hash = hash_password(ADMIN_PASSWORD)
+        db_seed_admin(ADMIN_EMAIL, admin_pwd_hash)
+    except Exception as e:
+        print(f"[Auth] Admin seed notice: {e}")
     # Warm up ATS cache in background daemon thread
     threading.Thread(target=warm_ats_cache, daemon=True).start()
     # Start periodic 15-day rolling data pruner daemon
@@ -93,7 +223,7 @@ async def startup_event():
 async def root_endpoint():
     return {
         "status": "ONLINE",
-        "service": "DRC Consulting Job Discovery & Matching Platform",
+        "service": "QuickJob Discovery & Matching Platform",
         "version": "2.0.0",
         "docs": "/docs",
         "health": "/api/health"
@@ -101,7 +231,7 @@ async def root_endpoint():
 
 
 @app.post("/api/admin/prune-data")
-async def prune_data_endpoint(days: int = Query(15, ge=1, le=365)):
+async def prune_data_endpoint(days: int = Query(15, ge=1, le=365), admin: Dict[str, Any] = Depends(get_current_admin)):
     """
     Manually triggers data retention cleanup:
     Deletes unapplied ephemeral search records older than specified days.
@@ -115,7 +245,7 @@ async def prune_data_endpoint(days: int = Query(15, ge=1, le=365)):
 
 
 @app.post("/api/admin/compact-db")
-async def compact_db_endpoint():
+async def compact_db_endpoint(admin: Dict[str, Any] = Depends(get_current_admin)):
     """Triggers SQLite VACUUM to reclaim disk pages."""
     try:
         result = await asyncio.to_thread(db_compact_database)
@@ -154,7 +284,7 @@ async def memory_stats_endpoint():
 
 @app.get("/api/health")
 async def health_endpoint():
-    return {"status": "ONLINE", "service": "DRC Job Intelligence Engine", "version": "2.0.0"}
+    return {"status": "ONLINE", "service": "QuickJob Intelligence Engine", "version": "2.0.0"}
 
 
 @app.get("/api/locations")
@@ -258,7 +388,7 @@ async def execute_fresh_batch_discovery(
     default_skills = merged_skills or infer_key_skills(target_domain, "")
     cand = candidate or CandidateProfile(
         name="Candidate",
-        email="candidate@drc.com",
+        email="candidate@quickjob.internal",
         primary_domain=target_domain,
         location=location or "All India (Remote & Nationwide)",
         target_roles=[query] if query else ["Software Engineer"],
@@ -435,7 +565,7 @@ async def execute_fresh_batch_discovery(
 
     # Record to DB with batch tracking - unconditionally auto-save every discovered job to SQLite
     if final_jobs:
-        record_email = cand.email if (cand.email and cand.email.strip() and "preview" not in cand.email.lower() and not cand.email.startswith("visitor")) else "candidate@drc.com"
+        record_email = cand.email if (cand.email and cand.email.strip() and "preview" not in cand.email.lower() and not cand.email.startswith("visitor")) else "candidate@quickjob.internal"
         record_name = cand.name if (cand.name and cand.name.strip() and "preview" not in cand.name.lower()) else "Candidate"
         try:
             db_record_discovered_jobs(record_email, record_name, final_jobs)
@@ -732,7 +862,7 @@ async def submit_application_endpoint(application: CandidateApplication):
         return {
             "success": True,
             "application_id": app_id,
-            "message": "Application submitted successfully for DRC Consulting Review.",
+            "message": "Application submitted successfully for QuickJob Review.",
             "applied_at": app_dict.get("applied_at"),
         }
     except Exception as e:
@@ -792,7 +922,7 @@ async def get_discovered_jobs_endpoint(candidate_email: str = Query(...), limit:
     """
     all_jobs = []
     clean_email = (candidate_email or "").strip().lower()
-    if clean_email and clean_email not in ("all", "undefined", "null", "guest_consulting@drc.internal"):
+    if clean_email and clean_email not in ("all", "undefined", "null", "guest@quickjob.internal"):
         all_jobs = db_get_candidate_discovered_jobs(clean_email)
 
     all_jobs = db_get_candidate_discovered_jobs(candidate_email)
@@ -864,7 +994,7 @@ async def get_career_companies_endpoint():
 
 @app.get("/api/career-pages/stats")
 async def get_career_stats_endpoint():
-    """Returns verified capacity metrics matching DRC Job Assistant specification."""
+    """Returns verified capacity metrics matching QuickJob Platform specification."""
     try:
         from career_pages_engine import get_career_page_stats
         stats = await asyncio.to_thread(get_career_page_stats)
@@ -1013,9 +1143,215 @@ def run():
     port = int(os.getenv("PORT", "5055"))
     host = os.getenv("HOST", "0.0.0.0")
     print("\n" + "=" * 70)
-    print(f"   DRC CONSULTING JOB INTELLIGENCE ENGINE RUNNING ON http://localhost:{port}")
+    print(f"   QUICKJOB INTELLIGENCE ENGINE RUNNING ON http://localhost:{port}")
     print("=" * 70 + "\n")
     uvicorn.run(app, host=host, port=port, log_level="info")
+
+
+
+# ============================================================================
+# AUTHENTICATION & ADMIN API ROUTES
+# ============================================================================
+
+@app.post("/api/auth/signup")
+async def auth_signup(req: UserSignupRequest, request: Request):
+    """
+    Registers a new user with status 'pending'.
+    Account must be approved by an administrator before access is granted.
+    """
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    if not check_rate_limit(f"signup_{client_ip}", max_calls=10, window_sec=60):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many registration attempts. Please wait a moment."
+        )
+
+    # Input validation
+    clean_name = req.full_name.strip()
+    clean_email = req.email.strip().lower()
+    clean_pwd = req.password.strip()
+
+    if len(clean_name) < 2:
+        raise HTTPException(status_code=400, detail="Full name must be at least 2 characters.")
+    if "@" not in clean_email or "." not in clean_email:
+        raise HTTPException(status_code=400, detail="A valid email address is required.")
+    if len(clean_pwd) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
+
+    # Check existing user
+    existing = db_get_user_by_email(clean_email)
+    if existing:
+        raise HTTPException(status_code=400, detail="An account with this email address already exists.")
+
+    pwd_hash = hash_password(clean_pwd)
+    user = db_create_user(
+        full_name=clean_name,
+        email=clean_email,
+        password_hash=pwd_hash,
+        role="user",
+        status="pending",
+        target_role=req.target_role or "",
+        experience_years=req.experience_years or ""
+    )
+
+    return {
+        "success": True,
+        "status": "pending",
+        "message": "Your account is waiting for admin approval.",
+        "user": {
+            "id": user["id"],
+            "full_name": user["full_name"],
+            "email": user["email"],
+            "status": "pending",
+            "role": "user"
+        }
+    }
+
+
+@app.post("/api/auth/login")
+async def auth_login(req: UserLoginRequest, request: Request):
+    """
+    Authenticates a user.
+    Login rules:
+    - pending  -> returns status 'pending' with 'Your account is waiting for admin approval.'
+    - rejected -> returns status 'rejected' with 'Your request was not approved'
+    - approved -> returns JWT session token and user profile
+    """
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    if not check_rate_limit(f"login_{client_ip}", max_calls=15, window_sec=60):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many login attempts. Please wait a minute before trying again."
+        )
+
+    clean_email = req.email.strip().lower()
+    clean_pwd = req.password.strip()
+
+    user = db_get_user_by_email(clean_email)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password.")
+
+    if not verify_password(clean_pwd, user["password_hash"]):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password.")
+
+    user_status = user.get("status", "pending").lower()
+
+    if user_status == "pending":
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={
+                "status": "pending",
+                "message": "Your account is waiting for admin approval.",
+                "email": user["email"]
+            }
+        )
+
+    if user_status == "rejected":
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={
+                "status": "rejected",
+                "message": "Your request was not approved",
+                "email": user["email"]
+            }
+        )
+
+    if user_status != "approved":
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={"status": user_status, "message": "Account is not active."}
+        )
+
+    # Approved: issue token
+    token = create_access_token(user["id"], user["email"], user["role"])
+    return {
+        "status": "approved",
+        "token": token,
+        "user": {
+            "id": user["id"],
+            "full_name": user["full_name"],
+            "email": user["email"],
+            "role": user["role"],
+            "status": "approved",
+            "target_role": user.get("target_role", ""),
+            "experience_years": user.get("experience_years", "")
+        }
+    }
+
+
+@app.get("/api/auth/me")
+async def auth_me(current_user: Dict[str, Any] = Depends(get_current_user)):
+    """Returns profile for currently authenticated user with real-time status check."""
+    return {
+        "id": current_user["id"],
+        "full_name": current_user["full_name"],
+        "email": current_user["email"],
+        "role": current_user["role"],
+        "status": current_user["status"],
+        "target_role": current_user.get("target_role", ""),
+        "experience_years": current_user.get("experience_years", "")
+    }
+
+
+@app.post("/api/auth/logout")
+async def auth_logout():
+    return {"success": True, "message": "Logged out successfully."}
+
+
+@app.get("/api/admin/users")
+async def admin_get_users(
+    status: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    admin: Dict[str, Any] = Depends(get_current_admin)
+):
+    """
+    Admin-only: lists all signup requests with name, email, signup date, submitted data, status.
+    Supports filtering by status (pending/approved/rejected) and email search.
+    """
+    users = db_list_users(status=status, search=search)
+    return {
+        "success": True,
+        "count": len(users),
+        "users": users
+    }
+
+
+@app.post("/api/admin/users/{user_id}/status")
+async def admin_update_user_status(
+    user_id: int,
+    payload: UserStatusUpdateRequest,
+    admin: Dict[str, Any] = Depends(get_current_admin)
+):
+    """
+    Admin-only: updates user status to 'approved', 'rejected', or 'pending'.
+    Allows approving, rejecting, or disabling an approved user.
+    """
+    norm_status = payload.status.strip().lower()
+    if norm_status not in ("approved", "rejected", "pending"):
+        raise HTTPException(status_code=400, detail="Status must be 'approved', 'rejected', or 'pending'")
+
+    target_user = db_get_user_by_id(user_id)
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Prevent admin from disabling themselves accidentally
+    if target_user["id"] == admin["id"] and norm_status != "approved":
+        raise HTTPException(status_code=400, detail="Cannot alter your own administrator status.")
+
+    success = db_update_user_status(user_id, norm_status, approved_by=admin["email"])
+    updated_user = db_get_user_by_id(user_id)
+    return {
+        "success": success,
+        "user": {
+            "id": updated_user["id"],
+            "full_name": updated_user["full_name"],
+            "email": updated_user["email"],
+            "status": updated_user["status"],
+            "role": updated_user["role"],
+            "approved_at": updated_user.get("approved_at"),
+            "approved_by": updated_user.get("approved_by")
+        }
+    }
 
 
 if __name__ == "__main__":

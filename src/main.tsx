@@ -86,9 +86,9 @@ window.fetch = async function (...args) {
   }
 };
 
-if (window.location.hostname === "www.dheerajrathodconsult.com") {
+if (window.location.hostname === "www.quickjob.io") {
   window.location.replace(
-    `https://dheerajrathodconsult.com${window.location.pathname}${window.location.search}${window.location.hash}`
+    `https://quickjob.io${window.location.pathname}${window.location.search}${window.location.hash}`
   );
 }
 

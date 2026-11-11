@@ -3,7 +3,7 @@
  * Connects frontend multi-step application flow to the Job Engine on Port 5055.
  */
 
-import { DiscoveredJobItem, getJobEngineCandidates, setCachedWorkingEngineUrl } from './drcDiscoveryApi';
+import { DiscoveredJobItem, getJobEngineCandidates, setCachedWorkingEngineUrl } from './quickjobDiscoveryApi';
 import { ApiError } from './errors/AppError';
 import { errorLogger } from './errors/errorLogger';
 

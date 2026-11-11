@@ -1,102 +1,244 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 
-interface UserContextType {
+export interface UserProfile {
+  id: number | string;
+  full_name: string;
+  email: string;
+  role: 'user' | 'admin';
+  status: 'pending' | 'approved' | 'rejected';
+  target_role?: string;
+  experience_years?: string;
+  created_at?: string;
+  approved_at?: string;
+}
+
+export interface UserContextType {
+  user: UserProfile | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; status?: string; message?: string }>;
+  signup: (data: {
+    full_name: string;
+    email: string;
+    password: string;
+    target_role?: string;
+    experience_years?: string;
+  }) => Promise<{ success: boolean; status?: string; message?: string }>;
+  logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
+  // Backwards compatibility fields
   user_id: string | null;
   isPremiumUser: boolean;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  subscriptionEndDate: string | null;   // ISO date string e.g. "2025-08-15"
-  subscriptionPlan: string | null;      // "BASE" | "PLUS" | "PREMIUM" | null
-  daysUntilExpiry: number | null;       // null = not premium; ≤7 triggers banner
-  setUser: (user_id: string, isPremiumUser: boolean, token: string, subscriptionEndDate?: string | null, subscriptionPlan?: string | null) => void;
+  setUser: (user_id: string, isPremium: boolean, token: string) => void;
   clearUser: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-/** Compute days remaining until an ISO date string. Returns null if no date. */
-const computeDaysUntilExpiry = (endDate: string | null): number | null => {
-  if (!endDate) return null;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const expiry = new Date(endDate);
-  expiry.setHours(0, 0, 0, 0);
-  const diff = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  return diff;
+// Determine API base url
+const getApiBaseUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    const origin = window.location.origin;
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      // Check if running on Vite dev server (port 5173) -> job engine backend runs on port 5055
+      return 'http://localhost:5055';
+    }
+  }
+  return '';
 };
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user_id, setUser_id] = useState<string | null>(() => localStorage.getItem("user_id"));
-  const [isPremiumUser, setIsPremiumUser] = useState<boolean>(() => localStorage.getItem("is_premium_user") === "true");
-  const [isLoading, setIsLoading] = useState<boolean>(() => {
-    // Only show loading spinner if there is a stored user session to validate
-    return !!localStorage.getItem("user_id");
+  const [token, setToken] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('quickjob_token') || localStorage.getItem('token') || null;
   });
-  const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(() => localStorage.getItem("subscription_end_date"));
-  const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(() => localStorage.getItem("subscription_plan"));
+
+  const [user, setUserState] = useState<UserProfile | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const stored = localStorage.getItem('quickjob_user');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Validate session on mount
+  const refreshUser = useCallback(async () => {
+    const activeToken = token || localStorage.getItem('quickjob_token') || localStorage.getItem('token');
+    if (!activeToken) {
+      setUserState(null);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const baseUrl = getApiBaseUrl();
+      const res = await fetch(`${baseUrl}/api/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${activeToken}`,
+        },
+      });
+
+      if (res.ok) {
+        const userData: UserProfile = await res.json();
+        setUserState(userData);
+        localStorage.setItem('quickjob_user', JSON.stringify(userData));
+        localStorage.setItem('quickjob_token', activeToken);
+      } else {
+        // Invalid or expired token or revoked status
+        localStorage.removeItem('quickjob_token');
+        localStorage.removeItem('quickjob_user');
+        localStorage.removeItem('token');
+        setToken(null);
+        setUserState(null);
+      }
+    } catch {
+      // Network offline - keep cached user if approved
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token]);
 
   useEffect(() => {
-    setIsLoading(false);
-  }, []);
+    refreshUser();
+  }, [refreshUser]);
 
-  const setUser = (
-    id: string,
-    isPremium: boolean,
-    token: string,
-    endDate?: string | null,
-    plan?: string | null
-  ) => {
-    const normalizedToken = token || "";
+  const login = async (email: string, password: string): Promise<{ success: boolean; status?: string; message?: string }> => {
+    try {
+      const baseUrl = getApiBaseUrl();
+      const res = await fetch(`${baseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-    setUser_id(id);
-    setIsPremiumUser(isPremium);
-    setSubscriptionEndDate(endDate ?? null);
-    setSubscriptionPlan(plan ?? null);
+      const data = await res.json();
 
-    localStorage.setItem("user_id", id);
-    localStorage.setItem("is_premium_user", String(isPremium));
-    localStorage.setItem("token", normalizedToken);
-    localStorage.setItem("session_token", normalizedToken);
-    sessionStorage.setItem("token", normalizedToken);
-    sessionStorage.setItem("session_token", normalizedToken);
-    if (endDate) localStorage.setItem("subscription_end_date", endDate);
-    else localStorage.removeItem("subscription_end_date");
-    if (plan) localStorage.setItem("subscription_plan", plan);
-    else localStorage.removeItem("subscription_plan");
+      if (res.ok && data.status === 'approved') {
+        const authToken = data.token;
+        const profile: UserProfile = data.user;
+        setToken(authToken);
+        setUserState(profile);
+        localStorage.setItem('quickjob_token', authToken);
+        localStorage.setItem('token', authToken);
+        localStorage.setItem('quickjob_user', JSON.stringify(profile));
+        return { success: true, status: 'approved' };
+      }
+
+      // Check status gating (403 or specific status)
+      if (data.status === 'pending') {
+        return { success: false, status: 'pending', message: data.message || 'Your account is waiting for admin approval.' };
+      }
+      if (data.status === 'rejected') {
+        return { success: false, status: 'rejected', message: data.message || 'Your request was not approved' };
+      }
+
+      return {
+        success: false,
+        status: 'error',
+        message: data.detail || data.message || 'Invalid email or password.',
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        status: 'error',
+        message: err?.message || 'Unable to connect to QuickJob authentication service.',
+      };
+    }
+  };
+
+  const signup = async (data: {
+    full_name: string;
+    email: string;
+    password: string;
+    target_role?: string;
+    experience_years?: string;
+  }): Promise<{ success: boolean; status?: string; message?: string }> => {
+    try {
+      const baseUrl = getApiBaseUrl();
+      const res = await fetch(`${baseUrl}/api/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const resData = await res.json();
+      if (res.ok) {
+        return {
+          success: true,
+          status: 'pending',
+          message: resData.message || 'Your account is waiting for admin approval.',
+        };
+      }
+
+      return {
+        success: false,
+        status: 'error',
+        message: resData.detail || resData.message || 'Registration failed. Please check your inputs.',
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        status: 'error',
+        message: err?.message || 'Unable to reach the registration server.',
+      };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      const baseUrl = getApiBaseUrl();
+      await fetch(`${baseUrl}/api/auth/logout`, { method: 'POST' });
+    } catch {}
+
+    localStorage.removeItem('quickjob_token');
+    localStorage.removeItem('quickjob_user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user_id');
+    setToken(null);
+    setUserState(null);
+  };
+
+  const setUser = (userId: string, isPremium: boolean, authToken: string) => {
+    setToken(authToken);
+    localStorage.setItem('quickjob_token', authToken);
+    localStorage.setItem('token', authToken);
+    localStorage.setItem('user_id', userId);
   };
 
   const clearUser = () => {
-    setUser_id(null);
-    setIsPremiumUser(false);
-    setSubscriptionEndDate(null);
-    setSubscriptionPlan(null);
-
-    localStorage.removeItem("user_id");
-    localStorage.removeItem("is_premium_user");
-    localStorage.removeItem("token");
-    localStorage.removeItem("session_token");
-    localStorage.removeItem("user_session_screen");
-    localStorage.removeItem("subscription_end_date");
-    localStorage.removeItem("subscription_plan");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("session_token");
+    logout();
   };
 
-  const isAuthenticated = !!user_id;
-  const daysUntilExpiry = computeDaysUntilExpiry(subscriptionEndDate);
+  const isAuthenticated = !!token && !!user && user.status === 'approved';
+  const isAdmin = !!user && user.role === 'admin';
 
   return (
-    <UserContext.Provider value={{
-      user_id,
-      isPremiumUser,
-      isAuthenticated,
-      isLoading,
-      subscriptionEndDate,
-      subscriptionPlan,
-      daysUntilExpiry,
-      setUser,
-      clearUser,
-    }}>
+    <UserContext.Provider
+      value={{
+        user,
+        token,
+        isAuthenticated,
+        isAdmin,
+        isLoading,
+        login,
+        signup,
+        logout,
+        refreshUser,
+        user_id: user ? String(user.id) : null,
+        isPremiumUser: true,
+        setUser,
+        clearUser,
+      }}
+    >
       {children}
     </UserContext.Provider>
   );

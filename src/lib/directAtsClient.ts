@@ -7,7 +7,7 @@
  * Guarantees 100% real-time, active corporate requisitions even if the backend is cold-starting or offline.
  */
 
-import { DiscoveredJobItem, ConnectionRecord } from './drcDiscoveryApi';
+import { DiscoveredJobItem, ConnectionRecord } from './quickjobDiscoveryApi';
 
 interface AtsBoardTarget {
   company: string;
