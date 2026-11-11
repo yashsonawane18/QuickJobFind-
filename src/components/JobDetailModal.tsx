@@ -17,6 +17,7 @@ import {
   Lock,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { CopyAutoScriptButton } from './common/CopyAutoScriptButton';
 import { CandidateParsedProfile } from '../lib/applicationApi';
 
 export interface JobDetailData {
@@ -299,14 +300,17 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => onApply(job)}
-            className="px-8 py-3 rounded-xl bg-[#00C896] hover:bg-[#00E5AA] text-black font-black text-sm flex items-center justify-center gap-2 border-2 border-[#00E5AA] shadow-xl shadow-[#00C896]/30 hover:scale-105 transition-all cursor-pointer"
-          >
-            <span>Apply Now (Direct Opening)</span>
-            <ExternalLink className="w-4 h-4 text-black" />
-          </button>
+          <div className="flex items-center gap-2.5">
+            <CopyAutoScriptButton job={job} variant="modal" />
+            <button
+              type="button"
+              onClick={() => onApply(job)}
+              className="px-6 py-3 rounded-xl bg-[#00C896] hover:bg-[#00E5AA] text-black font-black text-sm flex items-center justify-center gap-2 border-2 border-[#00E5AA] shadow-xl shadow-[#00C896]/30 hover:scale-105 transition-all cursor-pointer"
+            >
+              <span>Apply Now (Direct Opening)</span>
+              <ExternalLink className="w-4 h-4 text-black" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
