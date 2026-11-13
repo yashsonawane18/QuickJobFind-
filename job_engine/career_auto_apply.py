@@ -21,7 +21,10 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 import httpx
 from pydantic import BaseModel, Field
-from playwright.async_api import async_playwright
+try:
+    from playwright.async_api import async_playwright
+except (ImportError, ModuleNotFoundError):
+    async_playwright = None
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 sys.path.append(str(PROJECT_ROOT))
@@ -314,6 +317,15 @@ async def execute_playwright_auto_apply_with_proof(
     fields_filled: List[str] = []
     page_title = f"{target.company} - {target.job_title}"
     confirmation_id = f"ATS-PROVED-{uuid.uuid4().hex[:8].upper()}"
+
+    if async_playwright is None:
+        logger.warning("Playwright is not installed in this environment; skipping browser automation.")
+        return {
+            "status": "warning",
+            "message": "Playwright is not installed in this server environment.",
+            "proof_url": None,
+            "fields_filled": [],
+        }
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(
