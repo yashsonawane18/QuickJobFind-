@@ -1,9 +1,9 @@
 @echo off
-title QuickJob (QuickJob)
+title QuickJob Platform
 cd /d "%~dp0"
 
 echo ==========================================================
-echo    Starting QuickJob System
+echo    Starting QuickJob Platform
 echo ==========================================================
 
 echo [1/2] Starting QuickJob Job Engine & Excel Service (Port 5055)...
