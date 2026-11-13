@@ -39,10 +39,13 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Determine API base url
 const getApiBaseUrl = (): string => {
+  const envUrl = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_JOB_ENGINE_URL || '').trim();
+  if (envUrl) {
+    return envUrl.startsWith('http') ? envUrl.replace(/\/$/, '') : `https://${envUrl.replace(/\/$/, '')}`;
+  }
   if (typeof window !== 'undefined') {
     const origin = window.location.origin;
     if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-      // Check if running on Vite dev server (port 5173) -> job engine backend runs on port 5055
       return 'http://localhost:5055';
     }
   }

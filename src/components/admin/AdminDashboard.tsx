@@ -37,7 +37,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToApp }) =
     if (!token) return;
     setIsLoading(true);
     try {
-      const baseUrl = typeof window !== 'undefined' && window.location.origin.includes('localhost') ? 'http://localhost:5055' : '';
+      const baseUrl = (import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.origin.includes('localhost') ? 'http://localhost:5055' : '')).trim().replace(/\/$/, '');
       const params = new URLSearchParams();
       if (statusFilter !== 'all') params.append('status', statusFilter);
       if (searchQuery.trim()) params.append('search', searchQuery.trim());
@@ -69,7 +69,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBackToApp }) =
     if (!token) return;
     setProcessingId(userId);
     try {
-      const baseUrl = typeof window !== 'undefined' && window.location.origin.includes('localhost') ? 'http://localhost:5055' : '';
+      const baseUrl = (import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.origin.includes('localhost') ? 'http://localhost:5055' : '')).trim().replace(/\/$/, '');
       const res = await fetch(`${baseUrl}/api/admin/users/${userId}/status`, {
         method: 'POST',
         headers: {

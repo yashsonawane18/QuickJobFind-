@@ -300,3 +300,17 @@ NOTIFICATION_WEBHOOK: () =>
 };
 
 export default API_ENDPOINTS;
+
+export const getApiBaseUrl = (): string => {
+  const envUrl = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_JOB_ENGINE_URL || '').trim();
+  if (envUrl) {
+    return envUrl.startsWith('http') ? envUrl.replace(/\/$/, '') : `https://${envUrl.replace(/\/$/, '')}`;
+  }
+  if (typeof window !== 'undefined') {
+    const origin = window.location.origin;
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return 'http://localhost:5055';
+    }
+  }
+  return '';
+};

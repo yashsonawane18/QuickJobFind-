@@ -257,6 +257,30 @@ def init_db(force: bool = False):
         """)
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);")
+
+        # Auto-seed companies from ats_registry_859.json on fresh database initialization
+        cursor.execute("SELECT count(*) FROM companies;")
+        if cursor.fetchone()[0] == 0:
+            reg_path = PROJECT_ROOT / "ats_registry_859.json"
+            if reg_path.exists():
+                try:
+                    import uuid as _uuid
+                    with open(reg_path, "r", encoding="utf-8") as _rf:
+                        _reg_data = json.load(_rf)
+                    for _item in _reg_data:
+                        _c_name = _item.get("company", "").strip()
+                        _c_slug = _item.get("slug") or re.sub(r'[^a-zA-Z0-9]', '', _c_name).lower()
+                        _c_domain = _item.get("domain", "")
+                        _c_career = _item.get("career_url", "")
+                        _c_hub = _item.get("default_hub", "India / Remote")
+                        if _c_name:
+                            cursor.execute("""
+                            INSERT OR IGNORE INTO companies (id, company_name, company_slug, website_url, headquarters_location, verified_status)
+                            VALUES (?, ?, ?, ?, ?, 1)
+                            """, (str(_uuid.uuid4()), _c_name, _c_slug, _c_career or _c_domain, _c_hub))
+                    conn.commit()
+                except Exception as _ex:
+                    print(f"[Init] Seed companies notice: {_ex}")
         conn.commit()
     _DB_INITIALIZED = True
 
