@@ -154,15 +154,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({
             </button>
           </form>
 
-          {/* Quick Demo Credentials Help */}
-          <div className="mt-5 p-3 rounded-xl bg-[#0A0A0A] border border-[#262626] text-[11px] text-zinc-400 space-y-1">
-            <span className="font-semibold text-zinc-300 block">Default Admin Access:</span>
-            <div className="flex items-center justify-between text-zinc-400">
-              <span>admin@quickjob.io</span>
-              <span className="font-mono text-zinc-500">QuickJobAdmin2025!</span>
-            </div>
-          </div>
-
           <div className="mt-6 pt-5 border-t border-[#262626] text-center">
             <p className="text-xs text-[#A1A1AA]">
               Don&apos;t have an account yet?{' '}
